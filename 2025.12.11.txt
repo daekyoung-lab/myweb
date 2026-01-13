@@ -1,0 +1,493 @@
+<link rel="stylesheet" href="chrome-search://local-ntp/animations.css"></link><link rel="stylesheet" href="chrome-search://local-ntp/local-ntp-common.css"></link><link rel="stylesheet" href="chrome-search://local-ntp/customize.css"></link>
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Regex Practice</title>
+</head>
+<body>
+    <div id="content"><p>Hello</p><p>World</p></div>
+    <pre id="output"></pre>
+    <script>
+        const html = document.getElementById("content").innerHTML;
+        const greedy = html.match(/<p>(.*)<\/p>/)[1];
+        const nonGreedy = [...html.matchAll(/<p>(.*?)<\/p>/g)].map(m => m[1]);
+        document.getElementById("output").textContent = `탐욕적: ${greedy}\n비탐욕적: ${nonGreedy.join(", ")}`;
+    </script>
+</body>
+</html>
+
+xml, json, python(list)
+1. matchAll() 결과(interator)
+[
+  ["<p>Hello</p>", "Hello"],
+  ["<p>World</p>", "World"]
+]
+m[0] → 전체 매칭 <p>Hello</p>
+m[1] → 괄호()로 캡처된 내용 "Hello"
+[ ... html.matchAll(...) ]
+matchAll() 결과는 반복자(Iterator)라 바로 배열처럼 사용할 수 없다.
+... 전개 연산자(spread)로 배열로 변환하는 것이다.
+[...matchAll결과] : 매칭 객체를 배열로 만들어줌.
+.map(m => m[1])
+배열로 변환된 매칭 객체를 순회하면서:
+m[1] → <p>내용</p> 중 캡처된 내용만 꺼냄
+
+
+정리 : 욕심없는 수량자( ? )
+PCRE	  VIM
+*?	|	\{-},  \{-0,}	: 최소 0개    PCRE 에서 .{0,}? 로 표현 가능
++?	|	\{-1,} 		: 최소 1개    PCRE 에서 .{1,}? 로 표현 가능
+??	|	\{-,1},   \{-0,1}	: 최소 0개 
+{n}?	|	\{-n}		: 최소 n개 
+{n,}?	|	\{-n,}		: 최소 n개 
+                   	\{-,n}		: 최소 0개 
+{m,n}?	|	\{-m,n}		: 최소 m개   
+
+
+1. 로그기록 : 날짜 시간 호스트명 프로세스명 메시지
+ 로그를 잘 이해하면 비정형 또는 반정형 데이터를 정형 데이터로 변환하는 ETL(추출, 변환, 적재) 과정을 효과적으로 수행할 수 있다. 
+ 반대로, ETL 과정을 반복하며 시행착오를 겪다 보면 자연스럽게 로그에 대한 전문성을 갖추게 된다.
+
+ 1) 비정형 데이터: 아무 형식이 없는 자유로운 데이터. (예: 사람들이 대화처럼 남긴 로그, 이미 형식이 없는 메시지)
+   • 예시: “서버 오류 발생! 확인 요망.”
+
+ 2) 반정형 데이터: 어느 정도 규칙이 있지만 완전하지 않은 데이터. (예: JSON, XML 형식으로 기록된 로그)
+  • 예시: { "timestamp": "2024-11-24", "level": "error", "message": "서버 오류 발생" }
+
+ 3) 정형 데이터: 규칙이 딱 정해진 표 같은 데이터. (예: 데이터베이스 테이블에 저장된 로그)
+
+2. 실습(로그에서 프로세스명만 추출할 수 있는 정규표현식을 작성하시오.)
+/^.\{26}
+%s///		(첫줄에 sshd 로 시작)
+/:.*
+:%s///		( : 로 시작해서 줄 끝까지 삭제 )
+g/\[.*/d 	/[.*     :%s///    로도 삭제 가능
+sort u   중복제거
+
+g/삭제할문자열/d,      v/남길문자열/d
+
+
+- html
+    <div id="content"><p>Hello</p><p>World</p></div>
+    <pre id="output"></pre>
+
+- javascript
+    <script>
+        const html = document.getElementById("content").innerHTML;
+        const greedy = html.match(/<p>(.*)<\/p>/)[1];
+        const nonGreedy = [...html.matchAll(/<p>(.*?)<\/p>/g)].map(m => m[1]);
+        document.getElementById("output").textContent = `탐욕적: ${greedy}\n비탐욕적: ${nonGreedy.join(", ")}`;
+    </script>
+
+
+엑셀을 이용하여 프로세스명 추출(분류)
+/^.\{26}
+:%s//&ㅋ/
+/ㅋ.\{-}:   ( 최소수량자 )
+:%s//&ㅋ/
+/\[.*\]:   (내용 삭제)
+:%s///  
+엑셀 -> 파일 불러오기 ( 파일 불러오기를 실행해야 한다. )
+ㅋ 로 분리
+
+
+-----------
+import re
+
+# 테스트 문자열
+sample_text = "I love Information Security and Teacher Gijeong! How do you feel about it?"
+
+# 정규표현식 패턴
+pattern_include = r"[ilove]"  # i, l, o, v, e 중 하나와 매칭
+pattern_exclude = r"[^ilove]"  # i, l, o, v, e를 제외한 문자와 매칭
+
+# 강조 표시 함수
+def highlight_matches(pattern, text):
+    return re.sub(pattern, lambda m: f"[{m.group()}]", text)
+
+# 결과 출력
+print("=== [ilove] 결과 강조 ===")
+print(highlight_matches(pattern_include, sample_text))
+
+print("\n=== [^ilove] 결과 강조 ===")
+print(highlight_matches(pattern_exclude, sample_text))
+
+
+정규 표현식을 다룰 때 자주 사용하는 문자(예: \d, \w, \s)는 백슬래시가 포함된다
+python 에서 변수에 pattern = "[abc]\\d" 처럼 인식되나  r"" 를 사용시 한번(\d) 만 사용하면 된다.
+ • r""은 문자열을 “있는 그대로” 사용하도록 만들어 준다.
+ • 정규 표현식에서 백슬래시를 자주 사용하는 경우, 코드가 더 간단하고 읽기 쉬워진다.
+ • 꼭 정규 표현식이 아니더라도, 파일 경로 등을 처리할 때도 유용하다:
+
+
+실습 코드(매칭/비매칭 단어 표시) ------------
+
+import re
+
+# 테스트 문자열
+sample_text = "I love Information Security and Teacher Gijeong! How do you feel about it?"
+
+# 정규표현식 패턴
+pattern_include = r"[ilove]"  # i, l, o, v, e 중 하나와 매칭
+pattern_exclude = r"[^ilove]"  # i, l, o, v, e를 제외한 문자와 매칭
+
+# 강조 표시 함수
+def highlight_matches(pattern, text):
+    return re.sub(pattern, lambda m: f"[{m.group()}]", text)
+
+# 결과 출력
+print("=== [ilove] 결과 강조 ===")
+print(highlight_matches(pattern_include, sample_text))
+
+print("\n=== [^ilove] 결과 강조 ===")
+print(highlight_matches(pattern_exclude, sample_text))
+
+
+re.sub는 문자열에서 패턴을 검색하고, 해당 부분을 지정된 문자열 또는 함수의 결과로 치환한다.
+re.sub(pattern, repl, string)
+• pattern: 찾으려는 정규 표현식.
+• repl: 치환할 내용 또는 치환 로직을 정의하는 함수.
+• string: 변환하려는 원본 문자열.
+
+lambda: 익명 함수로, 한 줄로 간단히 정의된 함수.
+• m: 정규 표현식에서 매칭된 객체(매칭 결과)가 전달된다.
+• m.group(): 매칭된 문자열 자체를 반환한다.
+lambda m: f"[{m.group()}]"  는 m 값이 있다면 [값] 처럼 출력해라
+
+
+f""는 Python 3.6부터 추가된 문자열 포맷팅 기능으로, 문자열 내에 변수를 직접 삽입할 수 있는 간단하고 강력한 방법이다.
+{}: 중괄호 안에 변수를 넣거나, 계산식이나 함수 호출을 포함할 수도 있다
+• f"[{m.group()}]"는 f-string을 사용하여 문자열을 생성.
+• {m.group()} 부분에 m.group()의 결과(정규식 매칭된 값)가 삽입된다.
+• f-string 없이 동일한 작업을 수행  : lambda m: "[" + m.group() + "]" (지저분하다)
+
+1. re.sub는 text에서 pattern에 해당하는 모든 부분을 찾는다.
+2. 각 매칭된 결과는 lambda m: f"[{m.group()}]"에 전달된다.
+3. lambda 함수는 매칭된 텍스트를 받아 [매칭된 텍스트]로 변환한다.
+4. 변환된 결과로 원본 문자열을 치환한 새로운 문자열을 반환한다.
+
+http matches "(?i)\\w+\\.(php|html)"
+
+
+1. 캡처 그룹 특징
+ 1) 모든 메타 문자를 인식
+ 2) 검사 결과를 임시 저장하는 특징을 가지고 있다.
+ 3) 검사 결과의 재사용(동일한 형식이 따라 와야 한다, abcdefabcdef   는 (abc)(def) 에서 \1\2 식으로 표현)
+
+
+2. 비캡처 : (?:...) 그룹 특징
+ 1) 그룹화는 필요하지만 캡처는 원하지 않을 때
+  • 괄호는 정규식에서 패턴을 묶는 역할을 한다.
+  • 기본 괄호((...))는 묶은 데이터를 캡처하고, 번호나 이름으로 참조할 수 있게 한다.
+  • 하지만 (?:...)는 단순히 그룹화만 하고 데이터는 캡처하지 않는다.
+ 2) (?:...)는 괄호 안의 정규식을 그룹화하지만, 캡처(저장)하지 않음.
+ 3) 캡처된 데이터(매칭된 값)를 나중에 참조할 필요가 없을 때 사용된다.
+ 4) 성능 향상에도 기여할 수 있다(불필요한 메모리 사용 방지).
+()()   (())
+([email (.*)])
+[email roror@gmail.com]
+
+
+
+--- 
+$ flag07 /tmp/email.txt words  --->  argv[0] argv[1] argv[2]  (flag07 /tmp/email.txt words)
+'{${`$value`}}'
+<?php
+
+function spam($email)
+{
+  $email = preg_replace("/\./", " dot ", $email);
+  $email = preg_replace("/@/", " AT ", $email);
+  
+  return $email;
+}
+
+function markup($filename, $use_me)     
+{
+  $contents = file_get_contents("/tmp/email.txt");
+
+  $contents = preg_replace("/(\[email (.*)\])/e", "spam(\"\\2\")", $contents);
+ "/(\[email (.*)\])/e", "spam(\"\\2\")",
+ "/     /e"  --->   pcre:"/value/i"; 
+ (\[email (.*)\]), "spam(\"\\2\")",
+
+  $contents = preg_replace("/\[/", "<", $contents);
+  $contents = preg_replace("/\]/", ">", $contents);
+
+  return $contents;
+}
+
+$output = markup($argv[1], $argv[2]);    //  /tmp/email.txt words
+
+print $output;
+
+?>
+
+
+
+
+Expression : /(He|She|It) is (in|on) the (class|desk)/gm
+샘풀 : He is in the class  (He in class는  \1 \2 \3 로 탐지 가능하다.)
+
+Expression : /(He|She|It) is (in|on) the (class|desk) \1 \2 \3/
+샘플 : She is in the class She in class
+
+비캡처
+Expression : (?:He|She|It) is (in|on) the (class|desk) He \1
+샘플 : He is in the class He in class
+
+--------
+import re
+
+pattern = r"(a|b|c)d"
+text = "ad bd cd"
+matches = re.findall(pattern, text)
+print(matches)  
+
+-------
+import re
+
+text = "file1.txt file2.jpg file3.pdf file4.docx"
+pattern = r"\.(\w+)"  # . 뒤에 오는 단어를 추출
+
+matches = re.findall(pattern, text)
+print(matches)  # ['txt', 'jpg', 'pdf', 'docx']
+
+
+-----
+비캡처 그룹
+import re
+
+pattern = r"(?:a|b|c)d"
+text = "ad bd cd"
+matches = re.findall(pattern, text)
+print(matches)  
+
+
+함수 설명
+findall() 함수는 Python의 re(정규표현식) 모듈에서 제공하는 함수로, 주어진 문자열에서 정규표현식과 일치하는 모든 부분을 찾아 리스트로 반환한다.
+ re.findall(pattern, string, flags=0)
+• pattern : 찾고자 하는 정규표현식 패턴, 문자열에서 이 패턴과 일치하는 모든 부분을 검색한다.
+• string : 검색 대상 문자열.
+• flags : 선택 사항으로, 정규표현식의 동작을 변경하는 옵션
+• findall()은 정규식과 매칭되는 모든 문자열을 리스트로 반환.
+• 캡처 그룹이 없으면 매칭된 전체 문자열 반환.
+• 캡처 그룹이 있으면, 캡처된 부분만 반환. 그룹이 여러 개면 튜플 형태로 반환. 
+
+\b 는 단어와 특수문자가 만나면 경계가 생긴다.  (특수문자 및 단어끼리는 경계가 없다.)
+\B 는 단어와 특수문자가 만나면 경계가 없다. (특수문자 및 단어끼리는 경계가 있다.)
+
+
+패턴1(?=패턴2)
+
+[ VIM ] - 전방탐색
+패턴1\(패턴2\)\@=	  z\({\)\@=    
+패턴1\(패턴2\)\@!	  z\({\)\@!     
+
+ 
+
+후방탐색
+PCRE : (?<= )
+  \(패턴1\)\@<=패턴2	 \(@\)\@<=d     왼쪽에 @ 가 있는 d 를 찾는다.
+  \(패턴1\)\@<!패턴2	 \(@\)\@<!d      왼쪽에 @ 가 없는 d 를 찾는다.
+
+1. Wireshark
+긍정 후방탐색을 이용해서 Referer를 만나면 http또는https roror.co.kr 인것을 탐지하시오.
+- 정답
+  http matches "(?<=Referer: )https?://roror.co.kr[^ ]+"
+  http matches "(?<=Referer: )https?://(?!roror.co.kr)[^ ]+"
+
+2. 아래 로그를 PCRE, VIM 에서 데몬명만 탐지(한번에 탐지하도록, 표현식)
+Jul 28 16:37:17 kali systemd: pam_unix(systemd-user:session): session opened for user lightdm by (uid=0)
+Jul 28 16:37:25 kali lightdm: pam_unix(lightdm-greeter:session): session closed for user lightdm
+Jul 28 16:50:56 kali systemd-logind[471]: System is powering down.
+Jul 28 16:50:56 kali lightdm: pam_unix(lightdm:session): session
+VIM : \(^.\{21}\)\@<=\(\(\w\+[-]\w\+\)\|\(\w\+\)\)\> 
+PCRE : /(?<=^.{21})((\w+[-]\w+)|(\w+))\b/gm
+
+http,https://www(web,ftp).roror.co.kr/pentest/index.php?file=write&a=100
+
+http://www.lsof.co.kr/index.php?mid=board&document_srl=147
+1. [URL 구분 방법 및 URI] -프로토콜://호스트(도메인)/경로?쿼리스트링
+ 1) URI : 리소스를 식별할 수 있는 문자열 (위치 또는 이름을 식별함 → URL 포함하는 상위 개념)
+     URI는 URL과 URN을 포함하는 상위 개념이며, 브라우저 주소창에 표시되는 주소(즉 URL)는 URI의 일종이다. 
+ 2) URL : URI 중에서도 리소스의 위치를 알려주는 것
+    리소스의 “위치” (어디 있는지)를 나타낸다. 즉, 접근 가능한 주소 (브라우저에 입력하는 주소 등) 
+ 3) URN : URI 중에서 리소스의 고유 이름을 제공 (위치는 없음)
+   리소스의 “이름” (무엇인지)을 나타낸다. 위치는 몰라도 이름만으로 식별 가능함. 
+   흔한 예: ISBN (책 고유 번호), ISSN (학술지), (샘플)urn:isbn:978-89-01-12345-6
+ 4) URI(URL)  : http://www.lsof.co.kr/index.php?mid=board&document_srl=147  (웹브라우저의 주소창에 표시되는 정보)
+  (1) ? 는 URL 본문과 쿼리 파라미터 시작 구분
+  (2) 변수와 변수는 & 로 구분
+  (3) = 는 변수 이름과 값을 구분
+ 5) 실생활 비유
+  (1) URI: “사람을 식별하는 모든 방식” (이름, 주소, 주민번호 등)
+  (2) URL: “주소” — 실제 위치
+  (3) URN: “이름” — 고유 이름 (예: 주민등록번호, ISBN)
+
+2. [White List]
+PCRE : \?[-\w]+=[-\w]+ 
+PCRE : \?([-\w]+=[-\w]+&?)+     (변수와 변수를 구분하는 &를 검사 범위에 포함하여 영역 전체를 검색)
+PCRE : \?([-\w]+=[-\w]+[&|#]?)+  (변수의 구분자가 &만 끝나는게 아니므로 &? 사용, 0또는 1개로 제한, #, | 등도 올 수 있다.)
+VIM : ?.*\(&\)\@=          (?mid=board) 	
+VIM : [^?]\+\(&\)\@=   (mid=board)
+
+3. [Black List]
+[^?]+&        ? 는 제외하고 & 까지 찾는다. 
+[^?]+& .*     ?는 제외하고 끝까지 찾는다.
+
+
+
+1. [ 대문자로 시작되는 단어만  선택 ]
+ ([A-Z])\w+  라는 정규표현식이 입력된 초기 화면으로 시작, [A-Z]\w+ 가능
+ 1) A-Z 대문자중 한 개
+ 2) \w+  반복되는 문자열 검사
+
+
+2. [소문자로 시작되는 단어]
+ \b[a-b]\w+   		  VIM  :  \>[a-b]\w\+ 
+ \b :  문자의 경계는 문자가 아닌문자로 / 문자가 아닌 문자의 경계는 문자로 결정
+ pcre:”/[a-z]\w+/ig” 대소문제 해제     [a-zA-Z]\w+  검사 결과도 가능
+
+ [A-z] 로 도 검색이 가능하나 6개의 특수기호가 포함 ( 알파벳 순서에 따라 )
+
+
+3. [문장부호로 끝나는 단어]
+ [a-z]\w+\. 
+ \B   :    문자의 경계는 문자로,   문자가 아닌 문자의 경계는 문자가 아닌 문자로 나타낸다    ( \.\B,   \w\B )
+ v2.1 이나   www.demo.com  같은 것은 해제 하고 싶다면
+ [a-z]\w+\. 와  [a-z]\w+\.\B 의 차이는 [a-z]\w+\.\b 를 사용하면 문장부호 이후 문자가 이어지는 패턴만 검사한다.
+
+ [a-z]\w+\.\B
+ → 점(.) 뒤에 단어 문자가 이어지는 경우는 매칭되지 않는다.
+ → \B는 “단어 경계가 아닌 곳”에서만 일치하므로,   . 뒤가 문자(=단어의 시작)이면 오히려 매칭되지 않는다.
+
+ [a-z]\w+\.\b
+ → 점(.)이 단어의 끝에 위치할 때, 즉 그 뒤가 단어 문자(숫자, 영문자, 언더스코어)가 아닌 경우에만 매칭됨
+
+ [문장부호로 끝나는 단어] - 검사 범위 확장   (  \S 는 [^\s],   \W 는 [^\w] 로가능 )
+[a-z]\w+[.,]\B       를  [a-z]\w+\W\B 로도 가능 하지만 (공백도 검사된다)
+[a-z]\w+[.,!]\B   추가 검사하고 싶은 문장 부호가 있다면 대상 문자열에 추가해주자.
+[a-z][-\w]+[^\s\w]\B       [-\w]+[^\s\w]\B 
+
+[VIM] - 문장부호로 끝나는 단어
+[-A-Za-z]\+[^ 0-9A-Za-z]
+[-A-Za-z]\+[^ 0-9A-Za-z]\s
+[-A-Za-z]\+[^ 0-9A-Za-z]\(\s\|\n\) 	 \(\s\|\n\) 는 공백 또는 줄바꿈 문자로 이어지는 문장 부호만 검사
+\(   \)  캡처 그룹 없이 사용하면 \n 에대한 OR연산이 실행된다. 
+
+- 전방 긍정 탐색
+[-A-Za-z]\+[^ 0-9A-Za-z]\(\s\|\n\)\@= 공백 또는 줄바꿈문자를 최종 검사 결과에서 제외함으로써  단어만을 검사한다.
+
+wireshark  ---->   .       \.    오류,    \\.           \   --->   \\ 표현
+smtp matches "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+
+- smtp :  base64
+Username: c25lYWt5ZzMza0Bhb2wuY29t
+echo "c25lYWt5ZzMza0Bhb2wuY29t" | base64 -d
+
+
+1. 이메일
+1) \S+@\S+ 의 경우 이메일만 검색되어야 하는데 특수문자도 검색되었다.
+2) [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}    (vim 에서 + 는 \ 처리 주의)
+3) Wireshark (http, imap, pop3 등) (1) smtp matches "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+
+2. URL
+하지만  www.demo.com 은 검사하지 못하고 있다.  (http:\/\/)?[.\w] 를 처리하여 http:// 제한 한다면?      
+(http:\/\/|www)[.\w]+   정상적으로  검사한다.
+(https:\/\/|www)[.\w]+
+(https?:\/\/|www)[.\w]+        제한 수량자 ? 사용하여 전체를 검색한다.
+(https?:\/\/|www)[.\w]+(net|uk|com)     -->   시작, 종료 문자의 범위를 지정 해주면 정확도는 더욱 높아진다.
+VIM  : \(https\?:\/\/\|www\)[.0-9A-Za-z_]\+\(net\|uk\|com\)
+
+[URL 전체 검사]  - (URI 와 착각하지 말자)
+(https?:\/\/|www)[./\w]+    
+-->  (https?:\/\/|www)[./\w]+(?=\?)?           처럼    / 를 추가하고    종료 문자 ? 가 없을때도 검색하게 설정 하였다.  탐색(?=후방)
+
+[URI 전체검사]
+(https?://|www)[.\w/\S]+
+
+[Black List 방식]
+(https?:\/\/|www)[^?\n\t\s]+      처럼 표현 가능   -->   \n \t  는  \s 에 포함되니 (https?:\/\/|www)[^?\s]+    처럼 검사 가능
+VIM  :   \(https\?:\/\/\|www\)[^?$^I]\+\>
+
+- 추천 여러 방법
+https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}([\/?#][^\s]*)?
+https?:\/\/[^\s\/?#]+(?:[^\s]*)?
+
+
+
+1. 첫번째와 두번째 표현식을 보면 IP의 범위를 벗어나 검색을 하고 있다.
+
+2. ((1[0-9][0-9]|2[0-5][0-5]|[0-9][0-9]?)\.){3}(1[0-9][0-9]|2[0-5][0-5]|[0-9][0-9]?)
+
+3. 전체 표현식중 마지막과 처음 옥텟을 검사하지 못하고 있다.  ( 처음에 267 이므로  2 다음에 6 범위를 넘어서므로 십단위로 넘어가서 검색이 되었다.)   
+
+4. \b 메타 문자를 이용하여 시작 및 종료 위치를 고정해보자.
+
+VIM : \<\(\(1\d\{2}\|2[0-5]\{2}\|2[0-4][0-9]\|\d\d\?\)\.\)\{3}\(1\d\{2}\|2[0-5]\{2}\|\d\d\?\)\>
+
+
+grep -oP '\b\d{1,3}(\.\d{1,3}){3}\b' 
+cat ./secure | egrep -o "\b((1[0-9][0-9]|2[0-5][0-5]|[0-9][0-9]?)\.){3}(1[0-9][0-9]|2[0-5][0-5]|[0-9][0-9]?)\b"
+
+awk '{for(i=1;i<=NF;i++) if($i ~ /^[0-9]{1,3}(\.[0-9]{1,3}){3}$/) print $i}' ./secure
+grep -oP '\b\d{1,3}(\.\d{1,3}){3}\b' ./secure | sort | uniq
+grep -oP '\b\d{1,3}(\.\d{1,3}){3}\b' ./secure | sed 's/\s//g'
+cat ./secure | egrep -o ".{24}" | sed 's/.*/&/g'  # 24개 출력
+
+- 데몬하고 IP 추출
+# grep -oP '\w+\[\d+\]:.*from \b\d{1,3}(\.\d{1,3}){3}\b' ./secure | awk '{print $1, $NF}'
+
+
+\v^.{26}
+%s///
+\W.*
+%s///
+sort u
+
+
+v/sshd/d
+^.\{26}
+%s///
+^\S\+\s\S\+\s\S\+  와  \v^\S+\s\S+\s\S+   는 같다
+\v(^\S+\s\S+\s\S+)@<=.*    전.후방탐색 내부 표션식에 사용되는 수량자는 욕심 없는 수량자로 문자열이 하나만 제외 되었다.
+\v(^\S+\s\S+\s\S+)@<=\s.*
+\[.*\]
+%s///
+
+# vi ./secure
+\v<((1\d{2}|2[0-5]{2}|2[0-4][0-9]|\d\d?)\.){3}(1\d{2}|2[0-5]{2}|\d\d?)>
+\v(\d+\.){3}\d+    -->  %s//ㅋ&ㅋ   로 치환후 엑셀로 읽어 들여 추출
+\v(for user|for)\s\S+    -->    for, for user 뒤에 검색
+
+
+기본 분석 예시
+1. SSH 로그인 성공 사용자 찾기: egrep -o 'Accepted password for [^ ]+' /var/log/secure 
+2. SSH 로그인 실패 발생(사용자 + IP): egrep -o 'Failed password for( invalid user)? [^ ]+ from [^ ]+' /var/log/secure 
+3. root 계정 로그인 시도 검색: egrep 'for root from [0-9.]+' /var/log/secure 
+4. sudo 명령어 사용 사유 조회: egrep -o 'COMMAND=[^ ]+' /var/log/secure 
+5. 원칙 없는 사용자 (invalid user)가 시도한 기능: egrep -o 'invalid user [^ ]+' /var/log/secure 
+6. 발생한 모든 로그인 IP 추적: egrep -o 'from [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' /var/log/secure 
+7. 특정 날짜 로그 필터: egrep '^Apr 30' /var/log/secure 
+8. 모든 로그인 시도 사용자 추적: egrep -o 'for [^ ]+' /var/log/secure | cut -d' ' -f2 | sort | uniq 
+9. 시도한 포트 목록: egrep -o 'port [0-9]+' /var/log/secure | cut -d' ' -f2 | sort | uniq 
+10. Perl-style lookaround 사용 (pcregrep): pcregrep -o1 '(?<=from )[^ ]+(?= port)' /var/log/secure 
+
+패턴 가능성 고급 분석 예시
+SSH 로그인 시도 분석 (사용자 + IP + 포트): pcregrep -o1 'Failed password for( invalid user)? ([^ ]+) from ([^ ]+)(?= port)' /var/log/secure 
+IP 발입 횟수 확인 (방식 포트 사용): grep 'Failed password' /var/log/secure | egrep -o 'from [^ ]+' | cut -d' ' -f2 | sort | uniq -c | sort -nr | head 
+sudo 명령 시간에 사용자 구도 및 로그 찾기: grep 'sudo' /var/log/secure | egrep -o '^[A-Za-z]{3} +[0-9]+ [0-9:]+|user=[^ ]+' | paste - - 
+SSH 성공 로그인 시간대별 횟수: grep 'Accepted password' /var/log/secure | egrep -o '^[A-Za-z]{3} +[0-9]+ [0-9:]+' | uniq –c
+
+
+- 스크립트
+TODAY=$(date '+%b %e')
+echo "[로그인 성공 사용자]"
+grep "^$TODAY" /var/log/secure | grep "Accepted password" | awk '{print $(NF-5)}' | sort | uniq
+echo "[로그인 실패 사용자]"
+grep "^$TODAY" /var/log/secure | grep "Failed password" | awk '{if ($(NF-6) == "invalid") print $(NF-4); else print $(NF-5)}' | sort | uniq
+

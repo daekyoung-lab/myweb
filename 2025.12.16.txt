@@ -1,0 +1,203 @@
+- 기본(개론 및 실습), 아래의 내용을 이해하기 위해 시간!!!
+- 정규표현식!!!! - 기본(반복, 하나하나 중요하다.)
+- LOG    (분석)
+- ................  
+
+https://system-monitoring.readthedocs.io/en/latest/log.html#id1
+
+
+- 리눅스에서 사용할 로그 시스템
+kali 는 systemd-journald 사용(최근 버전에서  rsyslog 제외)
+
+- journalctl 명령 사용법
+# journalctl --help
+# man journalctl
+• 0: emerg (긴급)
+• 1: alert (경고)
+• 2: crit (중요)
+• 3: err (오류)
+• 4: warning (경고)
+• 5: notice (공지)
+• 6: info (정보)
+• 7: debug (디버그)
+# journalctl -u sshd -f(# tail -f ./auth.log)
+# journalctl -xeu ssh.servic
+# journalctl --disk-usage
+# journalctl -u httpd -f  (-f 실시간)
+
+# vi /etc/systemd/journald.conf
+# man journald.conf
+/run/log/journal/  (alma 사용)
+/var/log/journal (ubuntu  사용)
+# cd /run/log/journal/$(cat /etc/machine-id)    ---> ` ` 사용 가능
+/usr/lib/systemd/journald.conf
+[Journal]
+#Storage=auto
+Storage=persistent
+
+/run/systemd/journal
+/run/log/journal
+# systemctl restart systemd-journald
+
+로그 저장
+journald는 로그를 메모리(/run/log/journal)나 디스크(/var/log/journal)에 저장할 수 있다. 
+메모리에 저장되는 로그는 시스템 재부팅 시 사라지므로, 지속적인 로그 보관을 위해서는 디스크에 로그를 저장하도록 설정해야 한다. 
+이를 위해 /etc/systemd/journald.conf 파일에서 Storage=persistent로 설정하면 된다. /var/log/journal/ 에 저장된다.
+
+
+2) 각 서비스 유닛별 로그 검색 : # journalctl -u sshd -a      ( sshd 서비스 유닛 검색 )
+3) 중요도에 따른 검색 : # journalctl -p 3
+4) 특정 날짜 이후 검색 : # journalctl --since="2020-06-19 00:13:33" --until="-60minutes"  ( --since 이후 , --until 현재 60분전까지 검색)
+5) 성공 로그 보기 : # cat /var/log/secure* | grep Accepted | awk '{print $9"\t"$11"\t"$14}' | sort | uniq     ( sort –u 중복제거 )
+6) 패스워드 실해 로그 : # cat /var/log/secure* | grep Failed\ password | awk '{print $9"\t"$11"\t"$14}' | sort | uniq
+7) su 실행 기록만 검색 : # grep 'su: pam_unix' /var/log/secure
+
+/run/utmp --> 현재 로그인한 사용자의 상태정보 --->  w, who, finger
+wtmp ---> 로그인/로그아웃 ---> last 
+last -t YYYYMMDDHHMMSS (특정일 이전에 접속한 사용자 정보확인)
+last -n 원하는 행의수, last -원하는 행의수r
+last -R ( ip 주소 정보만을 제외한 나머지 정보만 확인하기 )
+last -a ( ip 주소를 해당 행의 마지막열에 표시)
+last -d ( 외부접속정보만 확인
+
+lastlog --> lastlog
+ /var/log/lastlog
+-t 옵션을 이용하면 숫자만큼 최근 기간 동안의 사용자들의 마지막 로그인 시간을 알 수 있다.
+-u 옵션은 특정 사용자의 마지막 로그인 기록을 볼 수 있다.
+-b n : 지정한 n일 이전에 접속한 마지막 접속정보만을 확인
+ # lastlog 
+ # lastlog -b 30  (30일 이전에 마지막으로 로그인한 사용자 레코드 출력)
+ #lastlog -u roror (roror 사용자 마지막 로그인 레코드 출력)
+ #lastlog -t 3  (최근 3일간 마지막으로 로그인한 레코드 출력)
+
+btmp --->  # lastb -n roror  (로그인 실패 기록)
+acct/pacct ---> lastcomm
+
+# dnf install psacct
+▷ ac : 사용자가 로그온한 시간에 대한 통계를 표시합니다.
+▷ lastcomm : 이전에 실행된 명령에 대한 정보를 표시합니다.
+▷ sa : 이전에 실행된 명령에 대한 정보를 요약해줍니다.
+gdbus S X root __ 0.01 secs Sat Sep 28 15:50
+bash F root pts/0 0.00 secs Sat Sep 28 15:53
+플래그 : S(슈퍼유저 실행), F(fork()), X(SIGTERM 시그널에 종료)
+
+
+xferlog_enable=YES
+  ftp 접속후에 파일 업로드와 다운로드에 대한 로그메시지 저장 설정(xferlog, vsftpd 방식 둘다 적용)
+xferlog_file=/var/log/xferlog (기본값)
+  ftp 로그파일의 위치를 결정하는 지시자. 
+  기본으로 주석처리 되어 있다. 하지만 기본값으로 xferlog에 저장된다.
+  다른 파일명으로 변경하려면 이 옵션을 설정한다.
+xferlog_std_format=YES
+  로그파일에 남길 로그파일의 포맷을 기본포맷으로 남길 것인지 설정
+  이파일의 포맷보다는 vsftpd로그 포맷을 사용하는 것이 보다 자세한 로그를 남길 수 있다.
+
+
+Tue Dec 16 12:34:03 2025 1 ::ffff:10.0.0.2 17963505 /home/roror/LM2001060110_19v3_\xEC\x8B\x9C\xEC\x8A\xA4\xED\x85\x9C+\xEB\xB3\xB4\xEC\x95\x88+\xEC\x9A\xB4\xEC\x98\x81.pdf b _ i r roror ftp 0 * c
+Tue Dec 16 12:34:13 2025 1 ::ffff:10.0.0.2 11433 /home/roror/\xED\x8F\x89\xEA\xB0\x80\xEC\x9D\x98\xEA\xB2\xAC.txt a _ i r roror ftp 0 * c
+Tue Dec 16 12:34:28 2025 1 ::ffff:10.0.0.2 110 /home/roror/\xEA\xB3\x84\xEC\x82\xB0\xEA\xB8\xB0.txt a _ i r roror ftp 0 * c
+Tue Dec 16 12:34:34 2025 1 ::ffff:10.0.0.2 110 /home/roror/\xEA\xB3\x84\xEC\x82\xB0\xEA\xB8\xB0.txt a _ o r roror ftp 0 * c
+
+
+
+vsftpd log file 방식
+  xferlog 파일의 형식은 wu-ftpd 호환 형식이기 때문에 읽기가 쉽지 않다.
+  vsftpd_log_file 전송로그 방식으로 바꾸어 출력하자.
+
+auth       required     pam_listfile.so item=user sense=deny file=/etc/vsftpd/ftpusers onerr=succeed
+
+
+
+- Linux는 /etc/rsyslog.conf 에서 로그의 종류를 지정하고, 어떤 활동이 어떤 레벨에서 기록 될 것인지 설정한다.
+- facility는 메시지를 발생시킨 프로그램의 타입(기능)을 나타내는 값이며, severity(시베리티)는 메시지의 성격 또는 중요도를 나타낸다
+- 지시자 설명
+*.mail -/var/log/mail 는 mail 패턴과 일치하는 모든 로그 메시지를 /var/log/mail 파일에 기록하는 액션을 정의하고 있다.
+- 액션 구분자로서 사용되며, /var/log/mail은 파일 경로를 나타내며, 
+- 액션 설정에서 앞에 -를 붙여주는 것은 "액션을 실패해도 오류를 생성하지 않는다"의 의미다. 
+따라서 파일이 생성되지 않거나 접근 권한이 없는 경우에도 rsyslog는 오류를 발생시키지 않고 계속해서 다음 규칙을 처리한다.
+즉 *.mail -/var/log/mail은 .mail 패턴과 일치하는 모든 로그 메시지를 /var/log/mail 파일에 기록하는 액션을 정의하며. 
+액션 구분자인 -를 사용하여 액션을 실패해도 오류를 생성하지 않도록 설정한다.
+
+
+로그 파일 지정시 옵션 사용법
+ file : 지정한 파일에 로그를 기록
+ @host :  UDP 프로토콜을 사용하여 지정한 호스트로 메시지를 전달.
+ @@host : TCP 프로토콜을 사용하여 지정한 호스트로 메시지를 전달.
+ user : 지정한 사용자가 로그인한 터미널로 전달.(계정 아이디, 실습은 뒤에서)
+ * : 현재 로그인한 모든 사용자의 터미널로 전달.
+ 콘솔 또는 터미널 : 지정한 터미널로 메시지를 전달. 
+
+
+설정 방법(개론)
+ #vi /etc/syslog.conf
+ kern.* /var/log/kernel
+ 커널이 생성하는 모든 메시지를 /var/log/kernel 이라는 로그 파일에 저장한다.
+ kern.err @Windsor
+ kern.err /dev/console
+ 커널이 생성하는 메시지 중 err 혹은 그 이상의 레벨인 메시지를 Windsor 라는 호스트로 전송하고 콘솔 화면에 출력한다. 
+ *.emerg * 
+ 모든 긴습 메시지를 로그인한 모든 사용자의 콘솔에 출력한다.
+ *.info;mail.none;authpriv.none;cron.none;local1.none 	user   (user는 사용자 계정)
+
+
+# journalctl -p 4
+
+
+Severity
+*.notice 필터는 'notice', 'warning', 'err', 'crit', 'alert', 'emerg'와 같은 모든 레벨의 로그 메시지를 포함한다.
+*.!notice 필터는 info 만 탐지한다. 즉! notice 미만 탐지
+*.=info 필터는 info  수준의 메시지만 포함한다.
+*.!=info 필터는 info 수준의 메시지만 필터링 한다.
+uucp,news.err    uucp,news 는 err 수준 이상 포함
+
+
+* = all facilities or priorities
+none = the facilities have no given priorities Eg: mail.none
+
+중요도에 따른 검색 : # journalctl -p 3
+-n 행수 	:  가장 최근에 기록된 로그 중 행수 만큼 출력
+-r 	:  가장 최근 로그가 먼저 출력
+-o {short|verbose} : 지정한 형식으로 출력
+     short : syslog 형식
+     verbose : 로그의 상세 내용까지 출력
+-f 	: 최근 로그를 자동으로 출력
+-p 우선순위	: 우선순위로 필터링하여 출력
+-b 시간	: 현재 부팅 이후의 로그만 출력
+
+- 실습
+--since=시간 --until=시간 : 시간을 필터링하여 출력
+# journalctl --since="2022-04-01 01:01" --until="2022-04-03 01:01"
+
+필드명=값	: 필드명으로 필터링하여 출력
+# journalctl -F _SYSTEMD_UNIT
+
+
+if $syslogseverity-text == 'debug' then /var/log/severity/debug.log
+if $syslogseverity-text == 'info' then /var/log/severity/info.log
+if $syslogseverity-text == 'notice' then /var/severity/log/notice.log
+if $syslogseverity-text == 'warning' then /var/log/severity/warning.log
+if $syslogseverity-text == 'err' then /var/log/severity/error.log
+if $syslogseverity-text == 'crit' then /var/log/severity/critical.log
+if $syslogseverity-text == 'alert' then /var/log/severity/alert.log
+if $syslogseverity-text == 'emerg' then /var/log/severity/emergency.log
+
+emerg, alert.........
+logger -p <FACILITY>.<PRIORITY> "사용자 메시지 작성"
+
+
+# queue.filename : 큐 파일 이름 
+# queue.maxdiskspace : 큐의 최대 디스크 공간 
+# queue.saveonshutdown=on : 시스템 종료 시 큐 데이터를 디스크에 저장 
+# queue.type=LinkedList : 10,000개의 메시지를 저장할 수 있는 비동기 큐 
+# action.resumeRetryCount=- 1 : syslog 서버가 응답하지 않을 때 계속 전송 재시도 
+# Target=*** : syslog 서버 호스트 지정
+
+1. 설치
+# dnf install rsyslog-mysql
+# cat /usr/share/doc/rsyslog/mysql-createDB.sql | mysql
+> grant all privileges on Syslog.* to roror@localhost identified by 'pass';
+# vi /etc/rsyslog.conf
+$ModLoad ommysql
+:ommysql:host,dbname,user,password
+# systemctl restart rsyslog
+SELECT ReceivedAt,Facility,Priority,FromHost,Message FROM SystemEvents;
