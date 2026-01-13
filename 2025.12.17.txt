@@ -141,34 +141,4 @@ less than <
 CNT=`cat $USER_DIR/backup.txt | wc -l`
 
 
-# sed -n '1,3p' ~/backup/backup.txt
-# sed '1,3d' ~/backup/backup.txt
-
-
-
----------------
-#!/bin/bash
-BACKUP_DIR='/home/backup'
-BACKUP_CNT='4'
-USER_DIR='/root/backup'
-DATE=$(date +%Y%m%d%H%M)
-
-[[ -d $BACKUP_DIR ]] || { echo "$BACKUP_DIR 디렉토리가 없습니다. 생성중...."; sleep 1; mkdir $BACKUP_DIR; }
-[[ -d $USER_DIR ]] || { echo "$USER_DIR 디렉토리가 없습니다. 생성중...."; sleep 1; mkdir $USER_DIR; }
-grep home /etc/passwd | awk -F: '{print "tar cvfzP '$BACKUP_DIR'/'$DATE'-"$1".tar.gz /home/"$1}' > $USER_DIR/run.sh 2>> $USER_DIR/error.log
-echo "tar cvfzP $BACKUP_DIR/$DATE-logs.tar.gz /var/log" >> $USER_DIR/run.sh 2>> $USER_DIR/error.log
-sh $USER_DIR/run.sh > /dev/null 2>> $USER_DIR/error.log
-
-ls $BACKUP_DIR | awk -F- '{print $1}' | sort -ur > $USER_DIR/backup.txt
-CNT=`cat $USER_DIR/backup.txt | wc -l`
-echo "$BACKUP_DIR Number of files : $CNT"
-
-if [ $CNT -ge $BACKUP_CNT ] && [ -f $USER_DIR/backup.txt ];
-then
-        f_cnt=`sed '1,'$BACKUP_CNT'd' $USER_DIR/backup.txt`
-        for f_rm in $f_cnt
-        do
-                echo $f_cnt"* : delete"
-                rm $BACKUP_DIR/$f_rm*
-        done
-fi
+새로 수정
